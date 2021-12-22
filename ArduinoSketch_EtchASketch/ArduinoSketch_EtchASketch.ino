@@ -1,5 +1,7 @@
 /*
-  Etch a Sketch prototype
+  Etch a Sketch USB
+  Baptiste DELPHIN - 2021
+  https://github.com/bdelphin/EtchASketch
 */
 
 // Pin mapping
@@ -11,8 +13,10 @@ const int tiltSwitch = 2;
 // more the readings will be smoothed, but the slower the output will respond to
 // the input. Using a constant rather than a normal variable lets us use this
 // value to determine the size of the readings array.
+// All credit for this potentiometer smoothing method goes to Arduino.cc :
+// https://www.arduino.cc/en/Tutorial/BuiltInExamples/Smoothing
 const int numReadings = 30;
-int readIndex = 0;              // the index of the current reading
+int readIndex = 0;                  // the index of the current reading
 
 int leftReadings[numReadings];      // the readings from the analog input
 int leftTotal = 0;                  // the running total
@@ -22,15 +26,16 @@ int rightReadings[numReadings];      // the readings from the analog input
 int rightTotal = 0;                  // the running total
 int rightAverage = 0;                // the average
 
-int leftValue = 0;           // value read from the left pot
-int rightValue = 0;          // value read from the right pot
-int switchStatus = HIGH;     // switch status (HIGH by default)
+int leftValue = 0;                   // value read from the left pot
+int rightValue = 0;                  // value read from the right pot
+int switchStatus = HIGH;             // switch status (HIGH by default)
 
-int lastLeftValue = -10;       // last value read from the left pot
-int lastRightValue = -10;      // last value read from the right pot
-int lastSwitchStatus = HIGH; // last switch status
+int lastLeftValue = -10;             // last value read from the left pot
+int lastRightValue = -10;            // last value read from the right pot
+int lastSwitchStatus = HIGH;         // last switch status
 
 // while this boolean is true, no reading will actually be sent
+// (needed to avoid sending garbage data to the software)
 bool warmupAverageReadings = true;
 
 void setup() {
@@ -104,34 +109,5 @@ void loop() {
       }
   }
   
-  
-  delay(1);        // delay in between reads for stability
-
-
-
-  // PREVIOUS CODE :  
-  // read potentiometers values & switch status
-  //leftValue = map(analogRead(leftPot), 0, 1024, 1024, 0);
-  //rightValue = analogRead(rightPot);
-  //switchStatus = digitalRead(tiltSwitch);
-  
-  // send values if one of them changed
-  //if(leftValue != lastLeftValue || rightValue != lastRightValue || switchStatus != lastSwitchStatus) {
-    // update last read values
-    //lastLeftValue = leftValue;
-    //lastRightValue = rightValue;
-    //lastSwitchStatus = switchStatus;
-
-    // syntax is left:right:switch
-    //Serial.print(leftValue);
-    //Serial.print(":");
-    //Serial.print(rightValue);
-    //Serial.print(":");
-    //Serial.println(switchStatus);
-  //}
-  
-
-  // wait 2 milliseconds before the next loop for the analog-to-digital
-  // converter to settle after the last reading:
-  //delay(2);
+  delay(1); // delay in between reads for stability
 }
