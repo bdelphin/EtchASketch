@@ -2,9 +2,9 @@
 
 A modern clone of the classic Etch a Sketch game.
 
-![front](photos/front.jpg | width=200)
+![front](photos/front.jpg)
 
-![software](photos/software.png | width=200)
+![software](photos/software.png)
 
 More photos below.
 
@@ -41,11 +41,11 @@ I've used Bourns precision potentiometers as I happened to have some of them lay
 
 ## Photos
 
-![back](photos/back.jpg | width=200)
+![back](photos/back.jpg)
 
-![opened](photos/opened.jpg | width=200)
+![opened](photos/opened.jpg)
 
-![parts](photos/parts.jpg | width=200)
+![parts](photos/parts.jpg)
 
 ## Disclaimer
 
