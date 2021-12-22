@@ -25,6 +25,7 @@ Optionnal :
 - 3-pin JST-XH connectors (2x female, 2x male)
 - a 3D printer, if you want to print the case & knobs !
 - M3x4x4 brass inserts and M3x10 screws (4 of each)
+- a cutting plotter and some adhesive vinyl if you want to make the logo stencil
 
 If you buy some JST-XH connectors, to forget to buy the appropriate crimping tool.
 I've used Bourns precision potentiometers as I happened to have some of them laying around. You can use any potentiometer (cheap one will work perfectly), but be aware that they probably won't fit perfectly in the 3D printed case.
@@ -38,6 +39,8 @@ I've used Bourns precision potentiometers as I happened to have some of them lay
 4. Install PySerial with pip : `pip install pyserial` (or `pip3 install pyserial` or `python3 -m pip install pyserial`, don't know for sure as it depends which Operating System your computer is running)
 5. Run `python main.py` (or `python3 main.py`, again it depends on your OS. This app should run on any system where Python3 is available)
 6. At launch, you'll be asked to select the serial port on which the device is attached. You can test them all if that's necessary.
+
+The logo was made using black paint and a stencil cut in a sheet of adhesive vinyl using a cutting plotter (Silhouette Cameo).
 
 ## Photos
 
