@@ -1,10 +1,7 @@
 from tkinter import *
-import serial
+from serial import *
 import sys
 import glob
-import time
-
-from serial.serialutil import SerialException
 
 # globals, can't find how to do better
 exitFlag = False
@@ -29,15 +26,9 @@ class ResizingCanvas(Canvas):
         self.height = event.height
         # resize the canvas 
         self.config(width=self.width, height=self.height)
-        # rescale all the objects tagged with the "all" tag
-        #self.scale("all",0,0,wscale,hscale)
-        self.scale("all",0,0,wscale,hscale)
-        self.moveto("image", (self.width/2)-86, self.height-50)
+        self.scale("all",0,0,wscale,hscale)     
 
-        #self.scale("border_horizontal", 0, 0, wscale, 1)
-        #self.scale("border_vertical", 0, 0, 1, hscale)        
-
-def serial_ports():
+def listSerialPorts():
     """ Lists serial port names
 
         :raises EnvironmentError:
@@ -58,10 +49,10 @@ def serial_ports():
     result = []
     for port in ports:
         try:
-            s = serial.Serial(port)
+            s = Serial(port)
             s.close()
             result.append(port)
-        except (OSError, serial.SerialException):
+        except (OSError, SerialException):
             pass
     return result
 
@@ -76,7 +67,7 @@ def serialPopup(message, size):
     label = Label(popup, textvariable=var).pack(pady=10)
     var.set(message)
 
-    lst = serial_ports()
+    lst = listSerialPorts()
 
     var = StringVar(popup)
     var.set(lst[0]) # default value
@@ -120,22 +111,24 @@ def on_quit():
 
 def main():
     global exitFlag, root
+    shakeCount = 0
 
-    root.title('Etch a Sketch')
-    root.protocol("WM_DELETE_WINDOW", on_quit)
-    root.configure(background='red')
+    # Main window title, minsize & quit event handler
+    root.title('Etch a Sketc h')
+    root.minsize(width=400, height=300) # 400x300 minimum window size, 'cause otherwise the logo won't be displayed correctly
+    root.protocol("WM_DELETE_WINDOW", on_quit) 
+    root.bind("<Key>", keyup)
 
+    # Serial port popup & connection
     serialPort = serialPopup("Select a serial port to connect to :", "300x150").get()
-
     while True:
         try:
-            ser = serial.Serial(serialPort, 9800, timeout=1)
-
+            ser = Serial(serialPort, 9800, timeout=1)
+            # TODO : maybe improve this part ?
             # wait for a sec while arduino is resetting
             #time.sleep(1)
             # read launch message
             data = ser.readline()[:-2].decode('utf-8')
-            print(data)
             if(data != 'Etch a Sketch USB'):
                 raise CustomSerialException("Choosen serial device not responding as expected.")
             break
@@ -144,77 +137,61 @@ def main():
         except CustomSerialException:
             serialPort = serialPopup("Choosen device is not responding as expected.\n Please choose another one or try to reconnect the device : ", "400x150").get()
 
+
+    # Connected to USB device at this point, let's show a quick information popup and start drawing !
     infoPopup("Welcome to Etch a Sketch USB !\n\nYou're now ready to draw using the two knobs.\nTo erase, shake the device !\nPress q or Echap to quit.", "320x150")
-
-    del_count = 0
-
-    #root = Tk()
-    bottomFrame = Frame(root, background="red")
-    bottomFrame.pack(fill=Y, expand=False, side="bottom")
-    #bottomCanvas = Canvas(bottomFrame, width=850, height=100, bg="green")
-    #bottomCanvas.pack(fill=Y, expand=YES)
-
-    myframe = Frame(root)
-    myframe.pack(fill=BOTH, expand=YES, padx=20, pady=20)
-    root.bind("<Key>", keyup)
-    #root.resizable(False, False)
-
-    # background = ResizingCanvas(root, width=850, height=400, bg='red')
-    # #mycanvas.create_rectangle(0, 0, 850, 400, fill='red', outline='red')
-    # img = PhotoImage(file='logo_app_small.png')
-    # background.create_image((850/2)-86, 10, image=img)
-    # background.pack(fill=BOTH, expand=YES)
-    # background.addtag_all("all")
-
-    #mycanvas = ResizingCanvas(myframe, width=850, height=400, bg="gray", highlightthickness=20, highlightbackground='red')
-    mycanvas = ResizingCanvas(myframe, width=850, height=500, bg="gray")
-
-    #mycanvas.create_rectangle(0, 0, 850, 20, fill='red', outline='red')
-    #mycanvas.create_rectangle(0, 0, 20, 500, fill='red', outline='red')
-    #mycanvas.create_rectangle(830, 0, 850, 500, fill='red', outline='red')
-    #mycanvas.create_rectangle(0, 450, 850, 500, fill='red', outline='red')
-    img = PhotoImage(file='logo_app_small.png')
-
-    img_lbl = Label(bottomFrame, image=img, background="red")
-    img_lbl.pack(pady=(0,20))
-    #mycanvas.create_image(850/2, 420, anchor="center", image=img, tags=('image'))
-
-    mycanvas.pack(fill=BOTH, expand=YES)
-
-    # tag all of the drawn widgets
-    mycanvas.addtag_all("all")
-
     
-    
+    # TODO : add some sort of config popup ? (to choose color, "pencil" size ?)
 
-    while not exitFlag:
-        # grab serial data
+    # window background has to be set to red, Etch a Sketch fashion
+    root.configure(background='red')
+
+    # bottom frame : logo placeholder
+    logoFrame = Frame(root, background="red")
+    logoFrame.pack(fill=Y, expand=False, side="bottom")
+    # display the logo on this frame
+    logo = PhotoImage(file='logo_app_small.png')
+    logoLabel = Label(logoFrame, image=logo, background="red")
+    logoLabel.pack(pady=(0,20))
+
+    # canvas frame : where the drawing actually happens
+    canvasFrame = Frame(root)
+    canvasFrame.pack(fill=BOTH, expand=YES, padx=20, pady=20)
+    # custom canvas object, with resizing capabilities (thanks StackOverflow)
+    canvas = ResizingCanvas(canvasFrame, width=850, height=500, bg="gray")
+    canvas.pack(fill=BOTH, expand=YES)
+    # tag all of the drawn widgets (for resizing purpose)
+    canvas.addtag_all("all")
+
+    # exitFlag is set to true when the window exit button is hit or when q/Esc is pressed
+    # this condition was necessary to avoid an exception being raised
+    while not exitFlag:   
         try:
+            # grab serial data
             data = ser.readline()[:-2].decode('utf-8')
-
             if(data != ''):
-                x = ((int(data.split(':')[0])*(mycanvas.winfo_width()-40))/1024)+20
-                y = ((int(data.split(':')[1])*(mycanvas.winfo_height()-70))/1024)+20
+                size = canvas.winfo_height()/100
+                # convert potentiometers values to canvas x,y position
+                x = ((int(data.split(':')[0])*(canvas.winfo_width()-size))/1024)+(size/2)
+                y = ((int(data.split(':')[1])*(canvas.winfo_height()-size))/1024)+(size/2)
                 sw = data.split(':')[2]
+                
                 if(sw == '0'):
-                    del_count += 1
-                if(del_count > 10):
-                    mycanvas.delete("draw")
-                    del_count = 0
-                #mycanvas.create_line(x, y, x+5, y+5)
-                size = (mycanvas.winfo_height()-40)/100
-                id = mycanvas.create_rectangle(x-(size/2), y-(size/2), x+(size/2), y+(size/2), fill='black', tags=('draw'))
+                    shakeCount += 1
+                # if device shaked multiple times (approx 10, no debounce on arduino side)
+                if(shakeCount > 10):
+                    canvas.delete("draw")
+                    shakeCount = 0
+                
+                # draw
+                canvas.create_rectangle(x-(size/2), y-(size/2), x+(size/2), y+(size/2), fill='black', tags=('draw'))
 
-            # draw pixel
-            #if(data != ""):
-            #    print(data)
-
-            # update
+            # update canvas thingy
             root.update_idletasks()
             root.update()
         except(SerialException):
+            # raised when device is disconnected
             serialPort = serialPopup("Connection lost !\n Please reconnect or exit app : ", "300x150").get()
-        
 
 if __name__ == "__main__":
     main()
